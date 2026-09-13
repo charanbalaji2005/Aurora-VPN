@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.next/
+out/
+admin/.next/
+admin/tsconfig.tsbuildinfo
+
+# React Native / Android
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/local.properties
+mobile/.bundle/
+*.jks
+*.keystore
+
+# Secrets and state
+.env
+.env.*
+!.env.example
+*.tfstate
+*.tfstate.*
+.terraform/
+/etc/aurora/

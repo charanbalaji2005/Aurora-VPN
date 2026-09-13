@@ -1,0 +1,28 @@
+[Unit]
+Description=Aurora VPN gateway agent
+After=network-online.target wg-quick@wg0.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/aurora/agent.env
+ExecStart=/bin/sh -c 'exec /opt/aurora/venv/bin/uvicorn main:app --host "${AGENT_HOST:-0.0.0.0}" --port "${AGENT_PORT:-8443}"'
+WorkingDirectory=/opt/aurora/agent
+Restart=always
+RestartSec=5
+
+# The agent needs to run wg and manage wireguard configuration
+User=root
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=no
+RestrictRealtime=yes
+ReadWritePaths=/etc/wireguard /dev/shm /opt/aurora
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_SYS_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,60 @@
+apply plugin: "com.android.application"
+apply plugin: "com.facebook.react"
+
+react {
+    autolinkLibrariesWithApp()
+}
+
+android {
+    namespace "com.aurora.vpn"
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        applicationId "com.aurora.vpn"
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            // The JS layer reads this through the native module rather than
+            // hardcoding a host, so a debug build can point anywhere.
+            buildConfigField "String", "API_BASE_URL", "\"https://api.dev.aurora.example/\""
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            buildConfigField "String", "API_BASE_URL", "\"https://api.aurora.example/\""
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packagingOptions {
+        // wireguard-android ships the Go backend as a prebuilt .so per ABI.
+        jniLibs.useLegacyPackaging = false
+    }
+}
+
+dependencies {
+    implementation("com.facebook.react:react-android")
+    implementation("com.facebook.react:hermes-android")
+
+    // The real tunnel. Official library, no reimplementation of the protocol.
+    implementation("com.wireguard.android:tunnel:1.0.20230706")
+
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("androidx.core:core:1.15.0")
+    implementation("androidx.lifecycle:lifecycle-service:2.8.7")
+}

@@ -1,0 +1,31 @@
+#cloud-config
+package_update: true
+packages:
+  - wireguard
+  - nftables
+  - python3-venv
+  - unbound
+  - curl
+  - git
+
+write_files:
+  - path: /etc/aurora/bootstrap.env
+    permissions: "0600"
+    content: |
+      GATEWAY_ID=${gateway_id}
+      VPN_SUBNET=${vpn_subnet}
+      VPN_SUBNET_V6=${vpn_subnet_v6}
+      CONTROL_PLANE_URL=${control_plane_url}
+      BOOTSTRAP_SECRET=${bootstrap_secret}
+      COUNTRY=${country}
+      COUNTRY_CODE=${country_code}
+      CITY=${city}
+      ENDPOINT_HOST=${endpoint_host}
+      SSH_ALLOW_CIDR=${ssh_allow_cidr}
+      GATEWAY_VERSION=${gateway_version}
+
+runcmd:
+  - [git, clone, --depth, "1", --branch, "${git_ref}", "${git_repo}", /opt/aurora-src]
+  - [bash, -c, "set -a && source /etc/aurora/bootstrap.env && cd /opt/aurora-src && gateway/scripts/install-gateway.sh"]
+  - [bash, -c, "set -a && source /etc/aurora/bootstrap.env && cd /opt/aurora-src && gateway/scripts/register-gateway.sh"]
+  - [bash, -c, "shred -u /etc/aurora/bootstrap.env || rm -f /etc/aurora/bootstrap.env"]

@@ -1,0 +1,81 @@
+# Configuration management for the gateway fleet.
+#
+#   ansible-playbook -i inventory.ini site.yml \
+#     -e control_plane_url=https://api.aurora.example \
+#     -e bootstrap_secret=...
+---
+- name: Configure Aurora gateways
+  hosts: gateways
+  become: true
+  vars:
+    wg_port: 51820
+    agent_dir: /opt/aurora
+
+  tasks:
+    - name: Install packages
+      ansible.builtin.apt:
+        name:
+          - wireguard
+          - nftables
+          - unbound
+          - python3-venv
+        state: present
+        update_cache: true
+
+    - name: Enable forwarding
+      ansible.posix.sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        sysctl_file: /etc/sysctl.d/99-aurora.conf
+        reload: true
+      loop:
+        - { name: net.ipv4.ip_forward, value: "1" }
+        - { name: net.ipv6.conf.all.forwarding, value: "1" }
+
+    - name: Deploy agent
+      ansible.builtin.copy:
+        src: ../../gateway/agent/
+        dest: "{{ agent_dir }}/agent/"
+        mode: "0750"
+      notify: restart agent
+
+    - name: Install agent dependencies
+      ansible.builtin.pip:
+        requirements: "{{ agent_dir }}/agent/requirements.txt"
+        virtualenv: "{{ agent_dir }}/venv"
+        virtualenv_command: python3 -m venv
+
+    - name: Install systemd unit
+      ansible.builtin.copy:
+        src: ../../gateway/agent/aurora-agent.service
+        dest: /etc/systemd/system/aurora-agent.service
+        mode: "0644"
+      notify: restart agent
+
+    - name: Firewall policy
+      ansible.builtin.template:
+        src: ../../gateway/nftables/aurora.nft
+        dest: /etc/nftables.conf
+        mode: "0644"
+      notify: reload nftables
+
+    - name: Enable services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - "wg-quick@wg0"
+        - aurora-agent
+        - unbound
+
+  handlers:
+    - name: restart agent
+      ansible.builtin.systemd:
+        name: aurora-agent
+        state: restarted
+        daemon_reload: true
+
+    - name: reload nftables
+      ansible.builtin.command: nft -f /etc/nftables.conf
+      changed_when: true

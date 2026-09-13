@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+
+rule_files:
+  - alerts.yml
+
+scrape_configs:
+  - job_name: control-plane
+    metrics_path: /api/v1/health/metrics
+    static_configs:
+      - targets: ["api:8000"]
+
+  # Gateways expose node_exporter; the agent's own health goes to the control
+  # plane rather than being scraped, because gateways sit behind NAT.
+  - job_name: gateways
+    static_configs:
+      - targets: []
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance

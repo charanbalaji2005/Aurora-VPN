@@ -1,0 +1,70 @@
+groups:
+  - name: aurora-control-plane
+    rules:
+      - alert: ControlPlaneDown
+        expr: up{job="control-plane"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Control plane is not responding"
+          description: "No VPN session can start while this is down."
+
+      - alert: GatewayOffline
+        expr: aurora_gateway_up == 0
+        for: 3m
+        labels: { severity: critical }
+        annotations:
+          summary: "Gateway {{ $labels.gateway_id }} stopped reporting"
+          description: "Drain it in the admin console if it does not recover."
+
+      - alert: GatewayHighPacketLoss
+        expr: aurora_gateway_packet_loss_percent > 5
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Gateway {{ $labels.gateway_id }} has packet loss > 5%"
+          description: "Investigate gateway upstream network quality."
+
+      - alert: GatewayNearCapacity
+        expr: aurora_gateway_peer_utilization_percent > 85
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Gateway {{ $labels.gateway_id }} is above 85% peer capacity"
+
+      - alert: GatewayCpuHigh
+        expr: aurora_gateway_cpu_percent > 85
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Gateway {{ $labels.gateway_id }} CPU utilization > 85%"
+
+      - alert: GatewayMemoryHigh
+        expr: aurora_gateway_memory_percent > 90
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Gateway {{ $labels.gateway_id }} RAM utilization > 90%"
+
+      - alert: PeerProvisioningFailing
+        expr: rate(aurora_peer_provision_failures_total[5m]) > 0.2
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Peers are failing to install on {{ $labels.gateway_id }}"
+          description: "Users will see 'that location did not respond'."
+
+      - alert: ApiLatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(aurora_http_request_seconds_bucket[5m])) by (le, path)) > 1.5
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "p95 latency above 1.5s on {{ $labels.path }}"
+
+      - alert: NoSessionsStarted
+        expr: sum(rate(aurora_sessions_started_total[15m])) == 0
+        for: 20m
+        labels: { severity: warning }
+        annotations:
+          summary: "No VPN session has started in 20 minutes"
+          description: "Usually means sign-in or peer provisioning is broken."

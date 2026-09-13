@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Aurora VPN</string>
+    <string name="notif_channel">VPN connection</string>
+    <string name="notif_channel_desc">Shows while the VPN is on.</string>
+</resources>

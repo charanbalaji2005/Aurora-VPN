@@ -1,0 +1,22 @@
+buildscript {
+    ext {
+        buildToolsVersion = "35.0.0"
+        // 26 is the floor for the modern VpnService behaviour and the
+        // foreground-service lifecycle the tunnel relies on.
+        minSdkVersion = 26
+        compileSdkVersion = 35
+        targetSdkVersion = 35
+        ndkVersion = "26.1.10909125"
+        kotlinVersion = "1.9.24"  // required by the RN Gradle plugin itself
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle")
+        classpath("com.facebook.react:react-native-gradle-plugin")
+    }
+}
+
+apply plugin: "com.facebook.react.rootproject"

@@ -1,0 +1,49 @@
+{
+  "title": "Aurora VPN — Service overview",
+  "uid": "aurora-overview",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Active sessions",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "aurora_sessions_active" }]
+    },
+    {
+      "type": "stat",
+      "title": "Gateways online",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "targets": [{ "expr": "sum(aurora_gateway_up)" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Sessions started per minute, by country",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [{ "expr": "sum by (country) (rate(aurora_sessions_started_total[5m])) * 60" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Session endings by reason",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "targets": [{ "expr": "sum by (reason) (rate(aurora_sessions_ended_total[5m])) * 60" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Gateway load",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [{ "expr": "aurora_gateway_load_percent" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "API p95 latency",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(aurora_http_request_seconds_bucket[5m])) by (le, path))"
+        }
+      ]
+    }
+  ]
+}
