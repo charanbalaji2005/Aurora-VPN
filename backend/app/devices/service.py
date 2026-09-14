@@ -82,6 +82,11 @@ async def rotate_key(user_id: str, device_id: str, public_key: str) -> dict[str,
 
     db = get_db()
     device = await get_device(user_id, device_id)
+
+    existing = await db.devices.find_one({"public_key": public_key})
+    if existing and existing["_id"] != device["_id"]:
+        raise Conflict("That device key is already registered.", code="device_key_taken")
+
     await provisioning.revoke_device_peers(str(device["_id"]))
     await db.devices.update_one(
         {"_id": device["_id"]},
